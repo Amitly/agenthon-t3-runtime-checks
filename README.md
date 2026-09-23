@@ -1,0 +1,15 @@
+# Frozen I CFS spot check
+
+This repository runs one bounded local developer check of two published, immutable Track3 simulator images. It contains no simulator implementation, private research history, old run outputs, credentials, team proof or submission package. F remains the research control; publication or this small check does not promote I or establish official performance.
+
+Only manually dispatched standard public ubuntu-24.04 x64 Actions are allowed. One serial job,60-minute timeout, no Secrets, no paid runner, no build. The owner authorizes one dispatch; a second new dispatch is allowed only after a wrapper failure before any simulator started. Do not use Re-run jobs. Once simulations start, do not retry or add samples. The local controller refuses duplicate execution in one workspace and caps26 attempts; repository write users must also honor the cross-run budget.
+
+The fixed common2.4.2 / scorer3.1.0 comparison pins are historical and intentionally unchanged. Current upstream requires newer common>=2.4.4; this is not a claim of current submission-contract compatibility. Official scorer, input staging, sanitizer and timer are imported from pinned public sources. Candidate containers see only staged inputs and writable outputs, never reference answers or the host Docker socket.
+
+Before any simulation: anonymous F/I digest pull and exact Config/RootFS checks; real4CPU CFS quota and parent readback;16GiB/no-swap limit, UID65534, read-only root/input,64MiB noexec tmp,256PIDs,1024nofile,64MiB fsize,networknone,all capabilities dropped; exact prebuilt I native extension import/hash. Current MemAvailable must be>=8GiB and >1.5*historical selected peak+2GiB. This does not certify exclusive16GiB RAM, writable-layer quota, B200 or the private official launcher.
+
+At most one resource/import probe is currently planned (hard allowance two). Then I runs s001 and homog4 once. mp05,sf01,pop128,mega each run F/I warmups and FI then IF formal pairs:26 simulations. Correctness/resource failures stop immediately. Two orders both exceeding5% and50ms for the same self/host time metric stop later units. Keep all slow samples. No profiler or timing deductions. CFS observations and previous full cpuset validation remain separate; never claim FULL_CFS_VALIDATED.
+
+Artifacts last one day and are capped100MiB. All new metadata/timings/errors and file inventories are retained first; first failure outputs and one representative successful invocation per unit are preferred. Equal bytes may reference a retained duplicate. The retention manifest explicitly lists unbacked-up outputs. No old2.44GB evidence or image tar is uploaded. Account-wide artifact allowance is unknown; standard public runner minutes are free, artifact storage has separate billing rules. No billing settings are changed.
+
+After a successful check, the owner may separately prepare a private official submission package. This workflow never handles Team Key, uploads to CodaBench, changes repository visibility or publishes another image.

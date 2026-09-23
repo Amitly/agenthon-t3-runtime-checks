@@ -1,0 +1,80 @@
+{
+  "track_commit": "7ec967aa7527354b4be5456959a01769b89c1c0d",
+  "common_commit": "dfa92d242908bba4a448218b9c10ae391238d10d",
+  "common_version": "2.4.2",
+  "scorer_version": "3.1.0",
+  "units": [
+    "t3-s001-price-time-priority",
+    "t3-gbatch-homog-4",
+    "t3-mp05-cancel-churn-newest",
+    "t3-sf-01-baseline-regime",
+    "t3-gb-pop-128-agents",
+    "t3-gb-mega-throughput"
+  ],
+  "maximum_historical_peak_bytes": 3356610560,
+  "F": {
+    "id": "sha256:bcea3d203864daad5970a5ead6d901783d8607be5a1db3568394e4fcac2cf83d",
+    "ref": "ghcr.io/amitly/agenthon-t3-simulation@sha256:c1d7df6b4778c3366bd0c78c783ac8e226a41deaa2a9c41ee3837752e3ccbcb6",
+    "rootfs": [
+      "sha256:220fbc20291bf4036fa6b600052cb134f7f60cb253accace0e76e7c4eb7ca291",
+      "sha256:885aeac4099f734ea72d7b716f7dbfc0f4645239017091496b369e4a0cae0502",
+      "sha256:9bd296845b024b2e7678859d81f790c3e6ce8fb45d4f0d1ecfc75abc6d923f5e",
+      "sha256:67566248fe79f1043b859cd2a88ee0e5daa07138c1da96c40e39f7883af1cd02"
+    ],
+    "config": {
+      "Cmd": [
+        "simulate",
+        "--help"
+      ],
+      "Env": [
+        "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "LANG=C.UTF-8",
+        "GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D",
+        "PYTHON_VERSION=3.11.16",
+        "PYTHON_SHA256=91bcdebfdde239a003ae93738a7fce0f9230fee5c4bc2b86f6e6e8c6f98aabe8",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "PYTHONUNBUFFERED=1",
+        "PIP_NO_CACHE_DIR=1",
+        "PYTHONPATH=/opt"
+      ],
+      "Labels": {
+        "qfbench2.interface_version": "2.0"
+      },
+      "WorkingDir": "/tmp"
+    }
+  },
+  "I": {
+    "id": "sha256:313bb6316e2da4ef976d5f49359836acde7fc5af725ee686653a5b9710a953b6",
+    "ref": "ghcr.io/amitly/agenthon-t3-simulation@sha256:22e5a90d66e904a33f6f8e71b59a0d2491cd78bf05c7a881ca4134919854cf35",
+    "extension_sha256": "0887a383cceadbc95d09ba1f9d50962f82599a4f2ba31eae54680468e9d8b2d3",
+    "rootfs": [
+      "sha256:220fbc20291bf4036fa6b600052cb134f7f60cb253accace0e76e7c4eb7ca291",
+      "sha256:885aeac4099f734ea72d7b716f7dbfc0f4645239017091496b369e4a0cae0502",
+      "sha256:9bd296845b024b2e7678859d81f790c3e6ce8fb45d4f0d1ecfc75abc6d923f5e",
+      "sha256:67566248fe79f1043b859cd2a88ee0e5daa07138c1da96c40e39f7883af1cd02",
+      "sha256:8373be6aaab4c1b8afe85f03c715a908fd2220408f0815b0e9f671540f76b6b9",
+      "sha256:2a7e24e65b5feadcf85ec99ead1b9bb0ab4f532f109e20392a3fd1a86f90b67f"
+    ],
+    "config": {
+      "Cmd": [
+        "simulate",
+        "--help"
+      ],
+      "Env": [
+        "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+        "LANG=C.UTF-8",
+        "GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D",
+        "PYTHON_VERSION=3.11.16",
+        "PYTHON_SHA256=91bcdebfdde239a003ae93738a7fce0f9230fee5c4bc2b86f6e6e8c6f98aabe8",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "PYTHONUNBUFFERED=1",
+        "PIP_NO_CACHE_DIR=1",
+        "PYTHONPATH=/opt"
+      ],
+      "Labels": {
+        "qfbench2.interface_version": "2.0"
+      },
+      "WorkingDir": "/tmp"
+    }
+  }
+}
