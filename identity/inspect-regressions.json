@@ -1,0 +1,93 @@
+{
+  "F": {
+    "basis": "actual CI run37648545629 inspect subset",
+    "inspect": {
+      "Id": "sha256:bcea3d203864daad5970a5ead6d901783d8607be5a1db3568394e4fcac2cf83d",
+      "RootFS": {
+        "Type": "layers",
+        "Layers": [
+          "sha256:220fbc20291bf4036fa6b600052cb134f7f60cb253accace0e76e7c4eb7ca291",
+          "sha256:885aeac4099f734ea72d7b716f7dbfc0f4645239017091496b369e4a0cae0502",
+          "sha256:9bd296845b024b2e7678859d81f790c3e6ce8fb45d4f0d1ecfc75abc6d923f5e",
+          "sha256:67566248fe79f1043b859cd2a88ee0e5daa07138c1da96c40e39f7883af1cd02"
+        ]
+      },
+      "Architecture": "amd64",
+      "Os": "linux",
+      "Config": {
+        "Hostname": "",
+        "Domainname": "",
+        "User": "",
+        "AttachStdin": false,
+        "AttachStdout": false,
+        "AttachStderr": false,
+        "Tty": false,
+        "OpenStdin": false,
+        "StdinOnce": false,
+        "Env": [
+          "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG=C.UTF-8",
+          "GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D",
+          "PYTHON_VERSION=3.11.16",
+          "PYTHON_SHA256=91bcdebfdde239a003ae93738a7fce0f9230fee5c4bc2b86f6e6e8c6f98aabe8",
+          "PYTHONDONTWRITEBYTECODE=1",
+          "PYTHONUNBUFFERED=1",
+          "PIP_NO_CACHE_DIR=1",
+          "PYTHONPATH=/opt"
+        ],
+        "Cmd": [
+          "simulate",
+          "--help"
+        ],
+        "Image": "sha256:d1c112377143a047cc1cd2b351754417f0c54991439ecd580d452d63fca09d62",
+        "Volumes": null,
+        "WorkingDir": "/tmp",
+        "Entrypoint": null,
+        "OnBuild": null,
+        "Labels": {
+          "qfbench2.interface_version": "2.0"
+        }
+      }
+    }
+  },
+  "I": {
+    "basis": "retained publication inspect subset; I was not reached in failed CI",
+    "inspect": {
+      "Id": "sha256:313bb6316e2da4ef976d5f49359836acde7fc5af725ee686653a5b9710a953b6",
+      "RootFS": {
+        "Layers": [
+          "sha256:220fbc20291bf4036fa6b600052cb134f7f60cb253accace0e76e7c4eb7ca291",
+          "sha256:885aeac4099f734ea72d7b716f7dbfc0f4645239017091496b369e4a0cae0502",
+          "sha256:9bd296845b024b2e7678859d81f790c3e6ce8fb45d4f0d1ecfc75abc6d923f5e",
+          "sha256:67566248fe79f1043b859cd2a88ee0e5daa07138c1da96c40e39f7883af1cd02",
+          "sha256:8373be6aaab4c1b8afe85f03c715a908fd2220408f0815b0e9f671540f76b6b9",
+          "sha256:2a7e24e65b5feadcf85ec99ead1b9bb0ab4f532f109e20392a3fd1a86f90b67f"
+        ],
+        "Type": "layers"
+      },
+      "Architecture": "amd64",
+      "Os": "linux",
+      "Config": {
+        "Cmd": [
+          "simulate",
+          "--help"
+        ],
+        "Env": [
+          "PATH=/usr/local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+          "LANG=C.UTF-8",
+          "GPG_KEY=A035C8C19219BA821ECEA86B64E628F8D684696D",
+          "PYTHON_VERSION=3.11.16",
+          "PYTHON_SHA256=91bcdebfdde239a003ae93738a7fce0f9230fee5c4bc2b86f6e6e8c6f98aabe8",
+          "PYTHONDONTWRITEBYTECODE=1",
+          "PYTHONUNBUFFERED=1",
+          "PIP_NO_CACHE_DIR=1",
+          "PYTHONPATH=/opt"
+        ],
+        "Labels": {
+          "qfbench2.interface_version": "2.0"
+        },
+        "WorkingDir": "/tmp"
+      }
+    }
+  }
+}

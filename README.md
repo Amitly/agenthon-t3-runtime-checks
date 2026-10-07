@@ -13,3 +13,26 @@ At most one resource/import probe is currently planned (hard allowance two). The
 Artifacts last one day and are capped100MiB. All new metadata/timings/errors and file inventories are retained first; first failure outputs and one representative successful invocation per unit are preferred. Equal bytes may reference a retained duplicate. The retention manifest explicitly lists unbacked-up outputs. No old2.44GB evidence or image tar is uploaded. Account-wide artifact allowance is unknown; standard public runner minutes are free, artifact storage has separate billing rules. No billing settings are changed.
 
 After a successful check, the owner may separately prepare a private official submission package. This workflow never handles Team Key, uploads to CodaBench, changes repository visibility or publishes another image.
+
+## Config representation repair (2026-10-08)
+
+The first real dispatch, [37648545629](https://github.com/Amitly/agenthon-t3-runtime-checks/actions/runs/37648545629), attempt1 at root `f3a4c6fcb2eda8145eaed419b956b43a18bf1682`, remains failed. It stopped in F preflight with `AssertionError: Image`, before I pull, the resource probe or any simulator. Its original decision says calls0/probes[]; missing calls.json was caused by that execution position. No candidate correctness or CFS availability conclusion follows from the failure.
+
+The expected Config is a reduced inspect representation. Fixed raw config bytes already contain these string values:
+
+| Image | Raw `config.Image` |
+|---|---|
+| F | `sha256:d1c112377143a047cc1cd2b351754417f0c54991439ecd580d452d63fca09d62` |
+| I | `sha256:62ef989ac31023f9328eb0134b7220ddd41845bb3b410cff5d600db1b0181e13` |
+
+These are legacy fields inside the image configuration, not the top-level image `Id` or the running container's `Image` field. F's failed-run inspect contains the exact raw value; retained I inspect omits the field. The first run did not capture actual Docker Engine/API versions. The image metadata `DockerVersion=""` and hosted-runner version do not establish them. The next preflight saves `docker version` before comparisons.
+
+The small `identity/` manifest/config files are exact metadata of the already-public digest references, with no layers, credentials, private history or simulation outputs. Before representation comparison, preflight verifies manifest SHA against the frozen registry reference; config SHA/size against that manifest and frozen image ID; raw and inspected ordered RootFS; linux/amd64; and actual image ID. Frozen references and expected Config are unchanged.
+
+Only `Image` receives the new narrow rule: absent, an exactly typed empty string (the existing default rule), or the exact nonempty string in that image's digest-verified raw config. Each side is checked independently. Unknown nonempty strings, the other image's value, null, booleans, numbers, arrays and objects fail—even when actual and expected happen to agree. A nonempty value without verified raw evidence fails. The missing/default cases are explicit representation cases, not a claim that the raw config has an empty value.
+
+Every other Config field retains strict recursive type/value/order comparison and the previous enumerated missing/default exceptions. Cmd, Entrypoint, Env, WorkingDir, User and Labels are still checked. Actual-vs-frozen, actual-vs-raw and frozen-vs-raw reports enumerate all fields and nested differences; both image reports are saved before raising a configuration error. Unknown fields are not discarded. Runtime resource flags, dependency pins, workflow and acceptance thresholds are unchanged.
+
+Offline controls reproduce the original F failure with the old comparator and check both real inspect subsets against exact raw bytes. They exercise all three Image representations, unbound/cross-image/wrong-type values, changed runtime fields, config/manifest bytes, image ID, ordered RootFS, platform, and complete difference reporting. I's fixture is retained publication inspect, not an invented inspect from the failed CI. Fixture metadata is only for controls, never a simulator input.
+
+After repair readback, the owner uses **Run workflow → main → Run workflow**, with no inputs, to create one new run. Do not use Re-run jobs on the failed run. Agent dispatch remains disabled. The cross-run simulation allowance stays26 and resource-probe allowance stays2; the failed preflight consumed0 of each. No image rebuild/push, current-contract rerun, automatic package or CodaBench upload is performed here. The separate newer offline content checks are not this historical CFS check or a current scoring-clock reproduction.

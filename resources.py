@@ -1,23 +1,114 @@
 """Read-only resource evidence. No daemon/context/controller changes."""
-import json,os,pathlib,subprocess,threading,time
+import hashlib,json,os,pathlib,subprocess,threading,time
 P=pathlib.Path
 def read(p):
  try:return P(p).read_text().strip()
  except (FileNotFoundError,PermissionError):return 'unavailable'
 def cmd(args):return subprocess.check_output(args,text=True)
-def compare_config(actual,expected):
- # Fixed Moby typed-Config zero values; raw image ID/rootfs remain exact.
- # Only absent versus the named default is accepted, never an unknown field.
- defaults={'Hostname':'','Domainname':'','Image':'','User':'','AttachStdin':False,'AttachStdout':False,'AttachStderr':False,'Tty':False,'OpenStdin':False,'StdinOnce':False,'Entrypoint':None,'OnBuild':None,'Volumes':None}
- differences=[]
- for k in set(actual)|set(expected):
-  if k in actual and k in expected:
-   assert type(actual[k]) is type(expected[k]) and actual[k]==expected[k],k
+class IdentityValidationError(AssertionError):
+ def __init__(self,report):
+  self.report=report
+  super().__init__('Image identity failed: '+', '.join(report['failures']))
+class ConfigComparisonError(AssertionError):
+ def __init__(self,report):
+  self.report=report
+  super().__init__('Config comparison failed: '+', '.join(report['failures']))
+_IDENTITY_VERIFIED=object()
+class VerifiedIdentity:
+ """Returned only after byte digests, ordered layers and platform all pass."""
+ def __init__(self,config_bytes,report,token):
+  if token is not _IDENTITY_VERIFIED:raise TypeError('Use verify_identity with original bytes')
+  self._config_bytes=bytes(config_bytes);self.report=report
+ @property
+ def raw(self):return json.loads(self._config_bytes)
+def typed_equal(a,b):
+ if type(a) is not type(b):return False
+ if isinstance(a,dict):return set(a)==set(b) and all(typed_equal(a[k],b[k]) for k in a)
+ if isinstance(a,list):return len(a)==len(b) and all(typed_equal(x,y) for x,y in zip(a,b))
+ return a==b
+def verify_identity(manifest_bytes,config_bytes,expected,actual):
+ """Bind retained original JSON bytes to the frozen reference and live inspect."""
+ checks=[];report={'status':'STARTED','checks':checks,'failures':[],
+  'manifest_sha256':hashlib.sha256(manifest_bytes).hexdigest(),
+  'config_sha256':hashlib.sha256(config_bytes).hexdigest(),
+  'manifest_bytes':len(manifest_bytes),'config_bytes':len(config_bytes),
+  'expected_ref':expected.get('ref'),'expected_id':expected.get('id')}
+ def check(name,ok):checks.append({'check':name,'passed':bool(ok)})
+ manifest={};raw={}
+ for name,payload in [('manifest',manifest_bytes),('config',config_bytes)]:
+  try:
+   obj=json.loads(payload);check(name+'_JSON_object',type(obj) is dict)
+   if type(obj) is dict:
+    if name=='manifest':manifest=obj
+    else:raw=obj
+  except (ValueError,UnicodeError) as ex:
+   check(name+'_JSON_object',False);report[name+'_parse_error']=type(ex).__name__+': '+str(ex)
+ reference=expected.get('ref');digest=reference.rsplit('@',1)[-1] if type(reference) is str and '@' in reference else None
+ check('manifest_digest_equals_frozen_ref',digest=='sha256:'+report['manifest_sha256'])
+ check('manifest_schemaVersion',type(manifest.get('schemaVersion')) is int and manifest.get('schemaVersion')==2)
+ descriptor=manifest.get('config') if type(manifest.get('config')) is dict else {}
+ check('config_digest_equals_manifest',descriptor.get('digest')=='sha256:'+report['config_sha256'])
+ check('config_size_equals_manifest',type(descriptor.get('size')) is int and descriptor.get('size')==len(config_bytes))
+ check('config_digest_equals_frozen_ID','sha256:'+report['config_sha256']==expected.get('id'))
+ rootfs=raw.get('rootfs') if type(raw.get('rootfs')) is dict else {}
+ inspected_rootfs=actual.get('RootFS') if type(actual.get('RootFS')) is dict else {}
+ check('raw_rootfs_type',rootfs.get('type')=='layers')
+ check('raw_ordered_RootFS',typed_equal(rootfs.get('diff_ids'),expected.get('rootfs')))
+ check('raw_platform',raw.get('os')=='linux' and raw.get('architecture')=='amd64')
+ check('raw_Config_object',type(raw.get('config')) is dict)
+ check('actual_ID',actual.get('Id')==expected.get('id'))
+ check('actual_rootfs_type',inspected_rootfs.get('Type')=='layers')
+ check('actual_ordered_RootFS',typed_equal(inspected_rootfs.get('Layers'),expected.get('rootfs')))
+ check('actual_platform',actual.get('Os')=='linux' and actual.get('Architecture')=='amd64')
+ check('actual_Config_object',type(actual.get('Config')) is dict)
+ report['failures']=[c['check'] for c in checks if not c['passed']]
+ report['status']='FAIL' if report['failures'] else 'PASS'
+ if report['failures']:raise IdentityValidationError(report)
+ return VerifiedIdentity(config_bytes,report,_IDENTITY_VERIFIED)
+def _nested_differences(a,b,path):
+ if typed_equal(a,b):return []
+ if type(a) is dict and type(b) is dict:
+  rows=[]
+  for key in sorted(set(a)|set(b)):
+   child=path+'/'+key
+   if key in a and key in b:rows.extend(_nested_differences(a[key],b[key],child))
+   else:rows.append({'path':child,'actual_present':key in a,'expected_present':key in b,'actual_type':type(a[key]).__name__ if key in a else 'missing','expected_type':type(b[key]).__name__ if key in b else 'missing','actual':a.get(key),'expected':b.get(key)})
+  return rows
+ if type(a) is list and type(b) is list and len(a)==len(b):
+  return [row for i,(x,y) in enumerate(zip(a,b)) for row in _nested_differences(x,y,path+'/'+str(i))]
+ return [{'path':path,'actual_type':type(a).__name__,'expected_type':type(b).__name__,'actual':a,'expected':b}]
+def config_comparison_report(actual,expected,identity=None):
+ """Collect every difference before the caller persists the report and raises."""
+ report={'status':'STARTED','actual':actual,'expected':expected,'differences':[],'failures':[]}
+ if type(actual) is not dict or type(expected) is not dict:
+  report.update(status='FAIL',failures=['Config must be an object']);return report
+ bound=type(identity) is VerifiedIdentity and identity.report.get('status')=='PASS'
+ raw=identity.raw['config'] if bound else {}
+ report['raw_identity_binding']=identity.report if bound else None
+ defaults={'Hostname':'','Domainname':'','User':'','AttachStdin':False,'AttachStdout':False,'AttachStderr':False,'Tty':False,'OpenStdin':False,'StdinOnce':False,'Entrypoint':None,'OnBuild':None,'Volumes':None}
+ for k in sorted(set(actual)|set(expected)|{'Image'}):
+  ap=k in actual;ep=k in expected;av=actual.get(k);ev=expected.get(k)
+  row={'field':k,'actual_present':ap,'expected_present':ep,'actual_type':type(av).__name__ if ap else 'missing','expected_type':type(ev).__name__ if ep else 'missing','actual':av,'expected':ev}
+  same=ap==ep and (not ap or typed_equal(av,ev))
+  if k=='Image':
+   rp='Image' in raw;rv=raw.get('Image')
+   raw_valid=not rp or type(rv) is str
+   def allowed(present,value):return not present or (type(value) is str and (value=='' or (bound and rp and type(rv) is str and rv!='' and value==rv)))
+   ok=raw_valid and allowed(ap,av) and allowed(ep,ev)
+   row.update(rule='Image: missing, strict empty string, or exact nonempty value from digest-bound raw config',raw_present=rp,raw_type=type(rv).__name__ if rp else 'missing',raw_value=rv)
+  elif ap and ep:ok=typed_equal(av,ev);row['rule']='strict recursive typed equality'
   else:
-   present=actual[k] if k in actual else expected[k]
-   assert k in defaults and type(present) is type(defaults[k]) and present==defaults[k],k
-   differences.append({'field':k,'actual_present':k in actual,'expected_present':k in expected,'value':present,'rule':'fixed typed-Config default'})
- return differences
+   present=av if ap else ev;ok=k in defaults and typed_equal(present,defaults[k]);row['rule']='fixed typed-Config default only'
+  row['passed']=ok
+  if not same and ap and ep:row['nested_differences']=_nested_differences(av,ev,'/'+k)
+  if not same or not ok:report['differences'].append(row)
+  if not ok:report['failures'].append(k)
+ report['status']='FAIL' if report['failures'] else 'PASS'
+ return report
+def compare_config(actual,expected,identity=None):
+ report=config_comparison_report(actual,expected,identity)
+ if report['status']!='PASS':raise ConfigComparisonError(report)
+ return report['differences']
 def flags():return ['--pull=never','--platform=linux/amd64','--runtime=runc','--network=none','--cpus=4','--memory=16g','--memory-swap=16g','--user=65534:65534','--cap-drop=ALL','--security-opt=no-new-privileges','--read-only','--tmpfs=/tmp:rw,noexec,nosuid,nodev,size=67108864,mode=1777','--pids-limit=256','--ulimit=nproc=256:256','--ulimit=nofile=1024:1024','--ulimit=fsize=67108864:67108864']
 def memory_guard(peak):
  mem={k:int(v.strip().split()[0])*1024 for k,v in (line.split(':',1) for line in P('/proc/meminfo').read_text().splitlines())}

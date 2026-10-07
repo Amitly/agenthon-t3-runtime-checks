@@ -41,16 +41,34 @@ def preflight():
  assert importlib.metadata.version('qfbench2-common')=='2.4.2' and SCORER_VERSION=='3.1.0'
  os.environ.pop('DOCKER_CONTEXT',None);os.environ['DOCKER_HOST']='unix:///var/run/docker.sock'
  empty=ROOT/'empty-docker-config';empty.mkdir(mode=0o700,exist_ok=False);os.environ['DOCKER_CONFIG']=str(empty)
- assert not list(empty.iterdir());engine=node();assert engine['os']=='linux' and engine['architecture'] in ['x86_64','amd64']
+ assert not list(empty.iterdir())
+ version=run(['docker','version']);save(O/'docker-version.json',{'argv':['docker','version'],'returncode':version.returncode,'stdout':version.stdout,'stderr':version.stderr});assert version.returncode==0
+ engine=node();assert engine['os']=='linux' and engine['architecture'] in ['x86_64','amd64']
  assert not subprocess.check_output(['docker','ps','-q'],text=True).strip()
  save(O/'node.json',{'docker':engine,'uname':platform.uname()._asdict(),'cpu_topology':run(['lscpu','-e']).stdout,'online':resources.read('/sys/devices/system/cpu/online'),'allowed_cpus':sorted(os.sched_getaffinity(0)),'memory':resources.memory_guard(C['maximum_historical_peak_bytes']),'python':sys.version,'dependencies':{x.metadata['Name']:x.version for x in importlib.metadata.distributions()},'timing':'official fixed local timer, host_measured; no official hardware equivalence'})
+ identities={};images={}
  for v in ['F','I']:
+  manifest_bytes=(ROOT/'identity'/f'{v}.manifest.json').read_bytes();config_bytes=(ROOT/'identity'/f'{v}.config.json').read_bytes()
+  (O/'identity').mkdir(exist_ok=True);(O/'identity'/f'{v}.manifest.json').write_bytes(manifest_bytes);(O/'identity'/f'{v}.config.json').write_bytes(config_bytes)
   before=subprocess.check_output(['docker','image','ls','--no-trunc'],text=True);p=run(['docker','pull','--platform=linux/amd64',C[v]['ref']],600)
   save(O/f'pull-{v}.json',{'returncode':p.returncode,'stdout':p.stdout,'stderr':p.stderr,'before_images':before,'credentials':'fresh empty CLI config','ref':C[v]['ref']});assert p.returncode==0
   actual=inspect(C[v]['ref']);save(O/f'image-{v}.json',actual)
-  assert actual['Id']==C[v]['id'] and actual['RootFS']['Layers']==C[v]['rootfs']
-  differences=resources.compare_config(actual['Config'],C[v]['config']);save(O/f'config-representation-{v}.json',differences)
-  assert actual['Architecture']=='amd64' and actual['Os']=='linux' and actual['Config']['WorkingDir']=='/tmp'
+  try:identity=resources.verify_identity(manifest_bytes,config_bytes,C[v],actual)
+  except resources.IdentityValidationError as ex:save(O/f'identity-{v}.json',ex.report);raise
+  save(O/f'identity-{v}.json',identity.report);identities[v]=identity;images[v]=actual
+ # Both immutable identities must pass before any representation exception applies.
+ config_failures=[]
+ for v in ['F','I']:
+  identity=identities[v];actual=images[v];raw=identity.raw['config'];expected=C[v]['config']
+  comparisons={name:resources.config_comparison_report(left,right,identity) for name,left,right in [
+   ('actual_vs_frozen',actual['Config'],expected),('actual_vs_raw',actual['Config'],raw),('frozen_vs_raw',expected,raw)]}
+  failures=[name+':'+field for name,report in comparisons.items() for field in report['failures']]
+  report={'status':'FAIL' if failures else 'PASS','failures':failures,'image':v,'identity':identity.report,'comparisons':comparisons}
+  save(O/f'config-representation-{v}.json',report)
+  config_failures.extend(v+':'+failure for failure in failures)
+ # Persist both already-collected images' complete comparisons before stopping.
+ if config_failures:raise resources.ConfigComparisonError({'status':'FAIL','failures':config_failures,'reports':['config-representation-F.json','config-representation-I.json']})
+ for v in ['F','I']:assert images[v]['Config']['WorkingDir']=='/tmp'
  base=O/'resource-probe';i,o=dirs(base);shutil.copy2(ROOT/'probe.py',i/'probe.py');(i/'probe.py').chmod(0o644)
  name='t3-core004c-resource';args=['docker','run','--name',name,*resources.flags(),'-v',str(i)+':/input:ro','-v',str(o)+':/output',C['I']['ref'],'python','/input/probe.py']
  probes.append({'index':1,'kind':'resource-native-import','state':'STARTED'});reconcile();save(base/'launch.json',args)
