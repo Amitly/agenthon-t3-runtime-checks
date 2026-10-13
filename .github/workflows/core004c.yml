@@ -10,7 +10,7 @@ jobs:
   check:
     if: github.repository == 'Amitly/agenthon-t3-runtime-checks' && github.event.repository.private == false && github.run_attempt == 1
     runs-on: ubuntu-24.04
-    timeout-minutes: 60
+    timeout-minutes: 360
     env:
       OMP_NUM_THREADS: '1'
       OPENBLAS_NUM_THREADS: '1'
@@ -30,23 +30,23 @@ jobs:
       - name: Control checks (no simulations)
         env:
           PYTHONPATH: track-src
-        run: python -m unittest -v test_controls
+        run: python -m unittest -v test_controls test_final_controls
       - name: Frozen image and CFS checks, then bounded simulations
         run: |
           sudo env PATH="$PATH" \
             OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1 PYTHONDONTWRITEBYTECODE=1 \
             GITHUB_REPOSITORY="$GITHUB_REPOSITORY" GITHUB_EVENT_NAME="$GITHUB_EVENT_NAME" \
             GITHUB_RUN_ATTEMPT="$GITHUB_RUN_ATTEMPT" \
-            python run_ci.py
+            python final_run.py
       - name: Retain bounded new evidence
         if: always()
         run: sudo env PATH="$PATH" python retain.py
-      - name: Upload one-day evidence
+      - name: Upload seven-day bounded evidence
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: core004c-${{ github.run_id }}
           path: artifact/
-          retention-days: 1
+          retention-days: 7
           compression-level: 0
           if-no-files-found: error

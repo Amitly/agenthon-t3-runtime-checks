@@ -1,0 +1,102 @@
+{
+  "stage": "FINAL_STYLE_20261013",
+  "replaces": "Unexecuted original Core004C 26-call simulation schedule; old Config.Image failure remains 0 calls and 0 probes",
+  "track_commit": "fe32378d92b9767a0452c8fbb9911dcf722a8c87",
+  "common_commit": "50fb2dc2b39c70f4cf81fcd269943782eddfaed0",
+  "common_version": "2.5.1",
+  "scorer_version": "3.1.0",
+  "maximum_attempts": 80,
+  "planned_initial_attempts": 60,
+  "warmups_per_block": 1,
+  "measured_per_block": 4,
+  "timeout_seconds": 300,
+  "workflow_controller_limit_seconds": 20400,
+  "maximum_probes": 2,
+  "output_limit_bytes": 268435456,
+  "tmp_limit_bytes": 67108864,
+  "primary_metric": "n_events / Docker State.FinishedAt-State.StartedAt; median of four rates, first of five excluded only from statistic",
+  "decision_rule": "Local preregistered risk flag: a unit I median daemon time is >5% and >50ms above F median. Not an official pass/fail threshold. Any such flag after all 60 successful calls selects F for 20 remaining acceptance calls; any execution/resource/output failure stops instead. No extra samples.",
+  "blocks": [
+    [
+      "t3-s001-price-time-priority",
+      "I"
+    ],
+    [
+      "t3-eq-deterministic-baseline",
+      "I"
+    ],
+    [
+      "t3-mp05-cancel-churn-newest",
+      "F"
+    ],
+    [
+      "t3-mp05-cancel-churn-newest",
+      "I"
+    ],
+    [
+      "t3-as06-throughput-fast",
+      "I"
+    ],
+    [
+      "t3-ra03-large-shock",
+      "I"
+    ],
+    [
+      "t3-sf-01-baseline-regime",
+      "I"
+    ],
+    [
+      "t3-sf-01-baseline-regime",
+      "F"
+    ],
+    [
+      "t3-gb-mega-throughput",
+      "F"
+    ],
+    [
+      "t3-gb-mega-throughput",
+      "I"
+    ],
+    [
+      "t3-gbatch-homog-4",
+      "I"
+    ],
+    [
+      "t3-gbatch-homog-4",
+      "F"
+    ]
+  ],
+  "conditional_F_blocks": [
+    [
+      "t3-s001-price-time-priority",
+      "F"
+    ],
+    [
+      "t3-eq-deterministic-baseline",
+      "F"
+    ],
+    [
+      "t3-as06-throughput-fast",
+      "F"
+    ],
+    [
+      "t3-ra03-large-shock",
+      "F"
+    ]
+  ],
+  "historical_evidence_reused": "142 current-contract I outputs / 71 stable bindings and full independent batch evidence; no rerun",
+  "new_current_official_platform_score": "UNKNOWN",
+  "automatic_dispatch": false,
+  "automatic_upload": false,
+  "units": [
+    "t3-s001-price-time-priority",
+    "t3-eq-deterministic-baseline",
+    "t3-mp05-cancel-churn-newest",
+    "t3-as06-throughput-fast",
+    "t3-ra03-large-shock",
+    "t3-sf-01-baseline-regime",
+    "t3-gb-mega-throughput",
+    "t3-gbatch-homog-4"
+  ],
+  "timeout_clock": "Local full Docker CLI capped at300seconds; actual daemon start-exit independently<=300seconds. Conservative local envelope, not official lifecycle equivalence."
+}

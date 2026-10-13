@@ -109,7 +109,7 @@ def compare_config(actual,expected,identity=None):
  report=config_comparison_report(actual,expected,identity)
  if report['status']!='PASS':raise ConfigComparisonError(report)
  return report['differences']
-def flags():return ['--pull=never','--platform=linux/amd64','--runtime=runc','--network=none','--cpus=4','--memory=16g','--memory-swap=16g','--user=65534:65534','--cap-drop=ALL','--security-opt=no-new-privileges','--read-only','--tmpfs=/tmp:rw,noexec,nosuid,nodev,size=67108864,mode=1777','--pids-limit=256','--ulimit=nproc=256:256','--ulimit=nofile=1024:1024','--ulimit=fsize=67108864:67108864']
+def flags():return ['--pull=never','--platform=linux/amd64','--runtime=runc','--network=none','--cpus=4','--memory=16g','--memory-swap=16g','--user=65534:65534','--cap-drop=ALL','--security-opt=no-new-privileges','--read-only','--tmpfs=/tmp:rw,noexec,nosuid,nodev,size=67108864,mode=1777','--pids-limit=256','--ulimit=nproc=256:256','--ulimit=nofile=1024:1024','--ulimit=fsize=268435456:268435456']
 def memory_guard(peak):
  mem={k:int(v.strip().split()[0])*1024 for k,v in (line.split(':',1) for line in P('/proc/meminfo').read_text().splitlines())}
  assert mem['MemAvailable']>=8*1024**3 and mem['MemAvailable']>peak*1.5+2*1024**3,mem
@@ -148,16 +148,17 @@ def check_cgroups(e):
   value=r['memory.max'] if r['memory.max']!='unavailable' else r['memory.limit_in_bytes']
   assert value=='max' or int(value)>=17179869184
  return True
-def check_inspect(ins,image):
+def check_inspect(ins,image,*,check_exit=True):
  h=ins['HostConfig'];mounts={x['Destination']:x for x in ins['Mounts']};u={x['Name']:(x['Soft'],x['Hard']) for x in h['Ulimits']}
  assert ins['Image']==image and ins['Config']['WorkingDir']=='/tmp' and ins['Config']['User']=='65534:65534'
+ assert h['Runtime']=='runc'
  assert h['NanoCpus']==4000000000 and not h['CpusetCpus'] and h['CpuShares']==0
  assert h['Memory']==h['MemorySwap']==17179869184 and h['PidsLimit']==256
  assert h['ReadonlyRootfs'] and h['NetworkMode']=='none' and 'ALL' in h['CapDrop'] and 'no-new-privileges' in h['SecurityOpt']
  assert all(s in h['Tmpfs']['/tmp'].split(',') for s in ['rw','noexec','nosuid','nodev','size=67108864','mode=1777'])
- assert u=={'nofile':(1024,1024),'nproc':(256,256),'fsize':(67108864,67108864)}
+ assert u=={'nofile':(1024,1024),'nproc':(256,256),'fsize':(268435456,268435456)}
  assert set(mounts)=={'/input','/output'} and not mounts['/input']['RW'] and mounts['/output']['RW']
- assert not ins['State']['OOMKilled']
+ if check_exit:assert not ins['State']['OOMKilled']
 class Observe:
  """Passive cgroup readback while official timer runs; identical on F/I, no profiler."""
  def __init__(self,cidfile):self.cidfile=cidfile;self.stop=threading.Event();self.first=None;self.last=None;self.error=None

@@ -1,3 +1,9 @@
+> Current 2026-10-13 entry: [Final-style acceptance plan](FINAL_PLAN.md).
+> This explicitly replaces the unexecuted 26-call plan below with 60 initial
+> calls and, only on a recorded material daemon regression, 20 remaining F
+> calls. The workflow invokes `final_run.py`; `run_ci.py` remains historical.
+> Both use the same fixed public F/I images. Historical failure records remain.
+
 # Frozen I CFS spot check
 
 This repository runs one bounded local developer check of two published, immutable Track3 simulator images. It contains no simulator implementation, private research history, old run outputs, credentials, team proof or submission package. F remains the research control; publication or this small check does not promote I or establish official performance.

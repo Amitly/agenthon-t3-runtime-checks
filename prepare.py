@@ -1,6 +1,6 @@
 """Fetch only public pinned dependencies and selected LFS data, before timing."""
 import hashlib,json,os,pathlib,subprocess,sys
-P=pathlib.Path;ROOT=P(__file__).resolve().parent;C=json.loads((ROOT/'frozen.json').read_text())
+P=pathlib.Path;ROOT=P(__file__).resolve().parent;C=json.loads((ROOT/'final_plan.json').read_text())
 def run(a,**kw):subprocess.run(a,check=True,**kw)
 def checkout(name,url,commit):
  p=ROOT/name;p.mkdir(exist_ok=False)
